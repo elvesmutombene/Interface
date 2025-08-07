@@ -2,103 +2,132 @@
 <html lang="pt">
 <head>
   <meta charset="UTF-8">
-  <title>Criar Conta | MozVendas</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cadastro</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      margin: 0;
-      padding: 0;
+      background: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
-
-    .container {
-      max-width: 400px;
-      background: #fff;
-      padding: 30px;
-      margin: 60px auto;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      border-radius: 12px;
-    }
-
-    h1 {
-      text-align: center;
-      color: #333;
-    }
-
-    .subtitle {
-      text-align: center;
-      font-size: 14px;
-      color: #777;
-      margin-bottom: 20px;
-    }
-
-    input {
-      width: 100%;
-      padding: 12px;
-      margin: 8px 0;
-      box-sizing: border-box;
+    form {
+      background: white;
+      padding: 25px;
       border-radius: 8px;
-      border: 1px solid #ccc;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 300px;
     }
-
-    .hint {
-      font-size: 12px;
-      color: #888;
-      margin-top: -5px;
-      margin-bottom: 10px;
+    input {
       display: block;
-    }
-
-    button {
+      margin-bottom: 15px;
       width: 100%;
-      padding: 12px;
-      background: #2b7cff;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      padding: 10px;
+      width: 100%;
+      background-color: #28a745;
       color: white;
       border: none;
-      border-radius: 8px;
-      font-size: 16px;
+      border-radius: 4px;
       cursor: pointer;
     }
-
     button:hover {
-      background: #135ee6;
+      background-color: #218838;
+    }
+    small {
+      display: block;
+      margin-top: -10px;
+      margin-bottom: 10px;
+      font-size: 12px;
+      color: #555;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Criar Conta</h1>
-    <p class="subtitle">Preencha os dados para criar conta</p>
 
-    <form id="signup-form">
-      <input type="text" placeholder="Nome" required>
-      <input type="email" placeholder="Email" required>
-      <input type="password" placeholder="Senha" required>
-      <input type="password" placeholder="Repetir senha" required>
-      <input type="tel" placeholder="Número do WhatsApp" required>
-      <small class="hint">Use um número válido</small>
-      <input type="text" placeholder="Número" required>
+  <form id="cadastroForm">
+    <h2>Cadastro</h2>
+    
+    <input type="email" id="email" placeholder="Seu e-mail" required>
+    <small>⚠️ Use um e-mail real</small>
 
-      <button type="submit">Cadastrar</button>
-    </form>
-  </div>
+    <input type="password" id="senha" placeholder="Senha" required>
+    <small>⚠️ Use uma senha segura</small>
+
+    <input type="password" id="repetir-senha" placeholder="Repetir senha" required>
+
+    <input type="text" id="whatsapp" placeholder="Número do WhatsApp" required>
+
+    <button type="submit">Cadastrar</button>
+  </form>
+
+  <!-- Firebase Script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDN6WD6rxB7CqqK-OMRTkzJlSz-xNbe_Ks",
+      authDomain: "xavamoz.firebaseapp.com",
+      projectId: "xavamoz",
+      storageBucket: "xavamoz.appspot.com",
+      messagingSenderId: "681441008756",
+      appId: "1:681441008756:web:433985ef3f374672b78521"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    document.getElementById("cadastroForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById("email").value.trim();
+      const senha = document.getElementById("senha").value;
+      const repetirSenha = document.getElementById("repetir-senha").value;
+      const whatsapp = document.getElementById("whatsapp").value.trim();
+
+      if (!email.includes("@") || !email.includes(".")) {
+        alert("Use um e-mail válido!");
+        return;
+      }
+
+      if (senha.length < 6) {
+        alert("A senha deve ter pelo menos 6 caracteres.");
+        return;
+      }
+
+      if (senha !== repetirSenha) {
+        alert("As senhas não coincidem!");
+        return;
+      }
+
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
+        const user = userCredential.user;
+
+        await setDoc(doc(db, "usuarios", user.uid), {
+          email: email,
+          whatsapp: whatsapp,
+          criadoEm: new Date()
+        });
+
+        alert("Usuário cadastrado com sucesso!");
+        // Redirecionar, se quiser:
+        // window.location.href = "login.html";
+
+      } catch (error) {
+        alert("Erro ao cadastrar: " + error.message);
+      }
+    });
+  </script>
+
 </body>
 </html>
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyDN6WD6rxB7CqqK-OMRTkzJlSz-xNbe_Ks",
-  authDomain: "xavamoz.firebaseapp.com",
-  projectId: "xavamoz",
-  storageBucket: "xavamoz.firebasestorage.app",
-  messagingSenderId: "681441008756",
-  appId: "1:681441008756:web:433985ef3f374672b78521"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
